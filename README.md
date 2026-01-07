@@ -1,93 +1,93 @@
-# Web Scraping with Anthropic’s MCP
+# Anthropic의 MCP로 Webスクレイピング하기
 
-[![Bright Data Promo](https://github.com/luminati-io/LinkedIn-Scraper/raw/main/Proxies%20and%20scrapers%20GitHub%20bonus%20banner.png)](https://brightdata.com/)
+[![Bright Data Promo](https://github.com/luminati-io/LinkedIn-Scraper/raw/main/Proxies%20and%20scrapers%20GitHub%20bonus%20banner.png)](https://brightdata.co.kr/)
 
-This guide explains how to set up an MCP server for on-demand data extraction, connect with development tools, and leverage Bright Data for instant AI-compatible web information.
+이 가이드는 온디맨드 데이터 추출을 위한 MCP 서버를 설정하고, 개발 도구와 연결하며, Bright Data를 활용해 AI 호환 웹 정보를 즉시 확보하는 방법을 설명합니다.
 
-- [Understanding the Limitation: Why LLMs Need Help with Real-World Interaction](#understanding-the-limitation-why-llms-need-help-with-real-world-interaction)
-- [The Importance of MCP](#the-importance-of-mcp)
-- [Understanding Model Context Protocol](#understanding-model-context-protocol)
-- [MCP Architecture Explained](#mcp-architecture-explained)
-- [Developing Your Own MCP Server](#developing-your-own-mcp-server)
-- [Connecting Your MCP Server](#connecting-your-mcp-server)
-- [Using Bright Data's MCP for Professional Web Data Extraction](#using-bright-datas-mcp-for-professional-web-data-extraction)
-- [Further Reading](#further-reading)
+- [제약 이해하기: LLM이 실제 세계와 상호작용하는 데 왜 도움이 필요한가](#understanding-the-limitation-why-llms-need-help-with-real-world-interaction)
+- [MCP의 중요성](#the-importance-of-mcp)
+- [Model Context Protocol 이해하기](#understanding-model-context-protocol)
+- [MCP 아키텍처 설명](#mcp-architecture-explained)
+- [나만의 MCP 서버 개발하기](#developing-your-own-mcp-server)
+- [MCP 서버 연결하기](#connecting-your-mcp-server)
+- [전문적인 웹 데이터 추출을 위한 Bright Data의 MCP 사용하기](#using-bright-datas-mcp-for-professional-web-data-extraction)
+- [추가 읽을거리](#further-reading)
 
 ## Understanding the Limitation: Why LLMs Need Help with Real-World Interaction
 
-Large Language Models (LLMs) excel at processing and generating text from extensive training datasets. However, they face a critical constraint—they cannot naturally interact with the external world. This means they lack built-in capabilities to access local files, execute custom scripts, or retrieve current information from websites.
+대규모 언어 모델(LLM)은 방대한 학습 데이터셋을 바탕으로 텍스트를 처리하고 생성하는 데 뛰어납니다. 그러나 중요한 제약이 있습니다. 즉, 외부 세계와 자연스럽게 상호작용할 수 없습니다. 이는 로컬 파일에 접근하거나, 커스텀 스크립트를 실행하거나, 웹사이트에서 최신 정보를 가져오는 기능이 기본적으로 내장되어 있지 않다는 뜻입니다.
 
-Consider a basic example: asking Claude to extract details from an active Amazon product page is impossible without additional tools. Why? Because it doesn't have the inherent capability to browse the internet or trigger external actions.
+기본적인 예를 들어보겠습니다. Claude에게 활성 Amazon 상품 페이지에서 세부 정보를 추출해 달라고 요청하는 것은 추가 도구 없이는 불가능합니다. 왜일까요? 인터넷을 탐색하거나 외부 동작을 트리거할 고유한 기능이 없기 때문입니다.
 
 ![claude-without-mcp](https://github.com/luminati-io/web-scraping-with-mcp/blob/main/images/claude-without-mcp.png)
 
-Without supplementary tooling, LLMs cannot perform practical tasks that depend on real-time data or integration with external systems.
+보조 도구 없이 LLM은 실시간 데이터에 의존하거나 외부 시스템과의 통합이 필요한 실무 작업을 수행할 수 없습니다.
 
-This is where [Anthropic's Model Context Protocol (MCP)](https://www.anthropic.com/news/model-context-protocol) becomes valuable. It enables LLMs to communicate with external tools—like data extractors, APIs, or scripts—in a secure and standardized manner.
+바로 여기에서 [Anthropic's Model Context Protocol (MCP)](https://www.anthropic.com/news/model-context-protocol)가 유용합니다. MCP는 LLM이 데이터 추출기, API, 스크립트 같은 외부 도구와 안전하고 표준화된 방식으로 통신할 수 있도록 해줍니다.
 
-Here's the difference in action. After integrating a custom MCP server, we successfully extracted structured Amazon product information directly through Claude:
+다음은 실제로 달라지는 점입니다. 커스텀 MCP 서버를 통합한 뒤, Claude를 통해 구조화된 Amazon 상품 정보를 성공적으로 직접 추출했습니다.
 
 ![claude-amazon-product-data-extraction-results](https://github.com/luminati-io/web-scraping-with-mcp/blob/main/images/claude-amazon-product-data-extraction-results.png)
 
 ## The Importance of MCP
 
-- **Standardization:** MCP provides a uniform interface for LLM-based systems to connect with external tools and data—similar to how APIs standardized web integrations. This significantly reduces the need for custom integrations, accelerating development.
-- **Flexibility and Scalability:** Developers can replace LLMs or hosting platforms without rewriting tool integrations. MCP supports multiple communication methods (such as `stdio`), making it adaptable to various configurations.
-- **Enhanced LLM Capabilities:** By connecting LLMs to current data and external tools, MCP allows them to go beyond static responses. They can now deliver up-to-date, relevant information and trigger real-world actions based on context.
+- **표준화:** MCP는 LLM 기반 시스템이 외부 도구 및 데이터에 연결할 수 있는 통일된 인터페이스를 제공합니다. 이는 API가 웹 통합을 표준화한 방식과 유사합니다. 이를 통해 커스텀 통합의 필요성이 크게 줄어 개발이 가속화됩니다.
+- **유연성과 확장성:** 개발자는 도구 통합을 다시 작성하지 않고도 LLM 또는 호스팅 플랫폼을 교체할 수 있습니다. MCP는 `stdio` 같은 여러 통신 방식을 지원하므로 다양한 구성에 적응할 수 있습니다.
+- **LLM 기능 강화:** MCP는 LLM을 최신 데이터 및 외부 도구와 연결함으로써 정적인 응답을 넘어설 수 있게 합니다. 이제 LLM은 최신의 관련 정보를 제공하고, 컨텍스트에 따라 실제 세계의 동작을 트리거할 수 있습니다.
 
-> **Analogy**:
+> **비유**:
 > 
-> Think of MCP as a USB interface for LLMs. Just like USB allows different devices (keyboards, printers, external drives) to plug into any compatible machine without needing special drivers, MCP lets LLMs connect to a wide range of tools using a standardized protocol—no need for custom integration each time.
+> MCP는 LLM을 위한 USB 인터페이스라고 생각하시면 됩니다. USB가 특별한 드라이버 없이도 다양한 장치(키보드, 프린터, 외장 드라이브)를 호환 기기에 연결할 수 있게 해주듯, MCP는 표준화된 프로토콜을 통해 LLM이 폭넓은 도구에 연결되도록 해줍니다. 매번 커스텀 통합을 할 필요가 없습니다.
 
 ## Understanding Model Context Protocol
 
-Model Context Protocol (MCP) is an open standard developed by Anthropic that enables large language models (LLMs) to interact with external tools, APIs, and data sources in a consistent, secure way. It functions as a universal connector, allowing LLMs to perform real-world tasks like extracting website data, querying databases, or executing scripts.
+Model Context Protocol(MCP)은 Anthropic이 개발한 오픈 표준으로, 대규모 언어 모델(LLM)이 외부 도구, API, 데이터 소스와 일관되고 안전한 방식으로 상호작용할 수 있도록 합니다. MCP는 범용 커넥터로 기능하며, LLM이 웹사이트 데이터 추출, 데이터베이스 쿼리, 스크립트 실행과 같은 현실 세계의 작업을 수행할 수 있게 합니다.
 
-While Anthropic introduced it, MCP is open and extensible, meaning anyone can implement or contribute to the standard. If you've worked with [Retrieval-Augmented Generation (RAG)](https://brightdata.com/blog/web-data/rag-explained), you'll appreciate the concept. MCP builds on that idea by standardizing interactions through a lightweight JSON-RPC interface so models can access live data and take action.
+Anthropic이 이를 소개했지만 MCP는 개방형이며 확장 가능합니다. 즉, 누구나 표준을 구현하거나 기여할 수 있습니다. [Retrieval-Augmented Generation (RAG)](https://brightdata.co.kr/blog/web-data/rag-explained)를 사용해 본 적이 있다면 이 개념을 이해하기 쉬우실 것입니다. MCP는 경량 JSON-RPC 인터페이스를 통해 상호작용을 표준화함으로써, 모델이 라이브 데이터에 접근하고 동작을 수행할 수 있도록 한다는 점에서 그 아이디어를 확장합니다.
 
 ## MCP Architecture Explained
 
-At its foundation, MCP standardizes communication between an AI model and external capabilities.
+기본적으로 MCP는 AI 모델과 외부 기능 간의 통신을 표준화합니다.
 
-**Core Idea:** A standardized interface (usually JSON-RPC 2.0 over transports like `stdio`) allows an LLM (via a client) to discover and invoke tools exposed by external servers.
+**핵심 아이디어:** 표준화된 인터페이스(일반적으로 `stdio` 같은 전송 계층 위에서 JSON-RPC 2.0 사용)를 통해 LLM(클라이언트를 통해)이 외부 서버가 노출하는 도구를 탐색하고 호출할 수 있습니다.
 
-MCP operates through a client-server architecture with three key components:
+MCP는 세 가지 핵심 구성 요소를 갖춘 클라이언트-서버 아키텍처로 동작합니다.
 
-1. **MCP Host**: The environment or application that initiates and manages interactions between the LLM and external tools. Examples include AI assistants like _Claude Desktop_ or IDEs like _Cursor_.
-2. **MCP Client**: A component within the host that establishes and maintains connections with MCP Servers, handling the communication protocols and managing data exchange.
-3. **MCP Server:** A program (which we developers create) that implements the MCP protocol and exposes a specific set of capabilities. An MCP server might interface with a database, a web service, or, in our case, a website (Amazon). Servers expose their functionality in standardized ways:
-   - **Tools:** Callable functions (e.g. _scrape\_amazon\_product_, _get\_weather\_data_)
-   - **Resources:** Read-only endpoints for retrieving static data (e.g. fetch a file, return a JSON record)
-   - **Prompts:** Predefined templates to guide LLM interaction with tools and resources
+1. **MCP Host**: LLM과 외부 도구 간 상호작용을 시작하고 관리하는 환경 또는 애플리케이션입니다. 예로는 _Claude Desktop_ 같은 AI 어시스턴트나 _Cursor_ 같은 IDE가 있습니다.
+2. **MCP Client**: 호스트 내부의 구성 요소로, MCP Server와의 연결을 설정하고 유지하며 통신 프로토콜을 처리하고 데이터 교환을 관리합니다.
+3. **MCP Server:** (개발자가 만드는) MCP 프로토콜을 구현하고 특정 기능 집합을 노출하는 프로그램입니다. MCP 서버는 데이터베이스, 웹 서비스 또는 (이 글의 경우) 웹사이트(Amazon)와 인터페이스할 수 있습니다. 서버는 다음과 같은 표준화된 방식으로 기능을 노출합니다:
+   - **Tools:** 호출 가능한 함수(예: _scrape\_amazon\_product_, _get\_weather\_data_)
+   - **Resources:** 정적 데이터를 가져오기 위한 읽기 전용 エンドポイント(예: 파일을 가져오기, JSON 레코드 반환)
+   - **Prompts:** 도구 및 리소스와의 LLM 상호작용을 안내하는 사전 정의 템플릿
 
-Here's the MCP architecture diagram:
+다음은 MCP 아키텍처 다이어그램입니다:
 
 ![mcp-architecture-diagram-host-client-server-connections](https://github.com/luminati-io/web-scraping-with-mcp/blob/main/images/mcp-architecture-diagram-host-client-server-connections.png)
 
 _Image Source: [Model Context Protocol](https://modelcontextprotocol.io/introduction)_
 
-In this setup, the **host** (Claude Desktop or Cursor IDE) spawns an **MCP client**, which then connects to an external **MCP server**. That server exposes tools, resources, and prompts, allowing the AI to interact with them as needed.
+이 구성에서 **host**(Claude Desktop 또는 Cursor IDE)가 **MCP client**를 실행하고, 그 클라이언트가 외부 **MCP server**에 연결합니다. 해당 서버는 tools, resources, prompts를 노출하여 AI가 필요할 때 이를 상호작용할 수 있도록 합니다.
 
-In short, the workflow operates as follows:
+요약하면 워크플로는 다음과 같이 동작합니다:
 
-- The user sends a message like _"Fetch product info from this Amazon link."_
-- The MCP client checks for a registered tool that can handle that task
-- The client sends a structured request to the MCP server
-- The MCP server executes the appropriate action (e.g., launching a headless browser)
-- The server returns structured results to the MCP client
-- The client forwards the results to the LLM, which presents them to the user
+- 사용자가 _"이 Amazon 링크에서 상품 정보를 가져와."_ 같은 메시지를 보냅니다.
+- MCP client가 해당 작업을 처리할 수 있는 등록된 tool이 있는지 확인합니다.
+- 클라이언트가 MCP server로 구조화된 리クエスト를 전송합니다.
+- MCP server가 적절한 동작을 실행합니다(예: 헤드리스 브라우저 실행).
+- 서버가 구조화된 결과를 MCP client로 반환합니다.
+- 클라이언트가 결과를 LLM로 전달하고, LLM이 이를 사용자에게 제시합니다.
 
 ## Developing Your Own MCP Server
 
-Let's construct a Python MCP server to extract data from Amazon product pages.
+Amazon 상품 페이지에서 데이터를 추출하는 Python MCP server를 구축해 보겠습니다.
 
 ![amazon-product-page-example](https://github.com/luminati-io/web-scraping-with-mcp/blob/main/images/amazon-product-page-example.png)
 
-This server will offer two tools: one to download HTML and another to extract organized information. You'll interact with the server via an LLM client in Cursor or Claude Desktop.
+이 서버는 두 가지 tool을 제공합니다. 하나는 HTML을 다운로드하고, 다른 하나는 정리된 정보를 추출합니다. Cursor 또는 Claude Desktop의 LLM client를 통해 서버와 상호작용하게 됩니다.
 
 ### Step 1: Preparing Your Environment
 
-First, verify you have [Python 3](https://www.python.org/downloads/) installed. Then, create and activate a virtual environment:
+먼저 [Python 3](https://www.python.org/downloads/)가 설치되어 있는지 확인합니다. 그런 다음 가상 환경을 생성하고 활성화합니다:
 
 ```sh
 python -m venv mcp-amazon-scraper
@@ -97,7 +97,7 @@ source mcp-amazon-scraper/bin/activate
 .\mcp-amazon-scraper\Scripts\activate
 ```
 
-Install the necessary libraries: the [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk), [Playwright](https://playwright.dev/python/), and [LXML](https://lxml.de/).
+필요한 라이브러리인 [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk), [Playwright](https://playwright.dev/python/), [LXML](https://lxml.de/)을 설치합니다.
 
 ```sh
 pip install mcp playwright lxml
@@ -105,17 +105,17 @@ pip install mcp playwright lxml
 python -m playwright install
 ```
 
-This installs:
+이 명령은 다음을 설치합니다:
 
-- **mcp**: Python SDK for Model Context Protocol servers and clients that handles all the JSON-RPC communication details
-- **playwright**: Browser automation library that provides headless browser capabilities for rendering and scraping JavaScript-heavy websites
-- **lxml**: Fast XML/HTML parsing library that makes it easy to extract specific data elements from web pages using XPath queries
+- **mcp**: 모든 JSON-RPC 통신 세부 사항을 처리하는 Model Context Protocol 서버/클라이언트를 위한 Python SDK입니다.
+- **playwright**: JavaScript 비중이 큰 웹사이트를 렌더링하고 スクレイピング하기 위한 헤드리스 브라우저 기능을 제공하는 브라우저 자동화 라이브러리입니다.
+- **lxml**: XPath 쿼리를 사용해 웹 페이지에서 특정 데이터 요소를 쉽게 추출할 수 있게 해주는 빠른 XML/HTML 파싱 라이브러리입니다.
 
-In short, the MCP Python SDK (`mcp`) handles all protocol details, letting you expose tools that Claude or Cursor can call via natural-language prompts. Playwright allows us to render web pages completely (including JavaScript content), and lxml gives us powerful HTML parsing capabilities.
+요약하면, MCP Python SDK(`mcp`)가 프로토콜 세부 사항을 모두 처리해 주므로 Claude 또는 Cursor가 자연어 프롬프트로 호출할 수 있는 tool을 노출할 수 있습니다. Playwright는 웹 페이지(包括 JavaScript 콘텐츠)를 완전히 렌더링할 수 있게 해주고, lxml은 강력한 HTML 파싱 기능을 제공합니다.
 
 ### Step 2: Starting the MCP Server
 
-Create a Python file named `amazon_scraper_mcp.py`. Begin by importing the required modules and initializing the `FastMCP` server:
+`amazon_scraper_mcp.py`라는 Python 파일을 생성합니다. 먼저 필요한 모듈을 임포트하고 `FastMCP` server를 초기화합니다:
 
 ```python
 import os
@@ -133,11 +133,11 @@ mcp = FastMCP("Amazon Product Scraper")
 print("MCP Server Initialized: Amazon Product Scraper")
 ```
 
-This creates an instance of the MCP server. We'll now add tools to it.
+이 코드는 MCP server 인스턴스를 생성합니다. 이제 여기에 tool을 추가하겠습니다.
 
 ### Step 3: Implementing the `fetch_page` Tool
 
-This tool will take a URL as input, use Playwright to navigate to the page, wait for the content to load, download the HTML, and save it to our temporary file.
+이 tool은 URL을 입력으로 받아 Playwright로 페이지에 이동하고, 콘텐츠가 로드될 때까지 기다린 뒤 HTML을 다운로드하여 임시 파일에 저장합니다.
 
 ```python
 @mcp.tool()
@@ -172,11 +172,11 @@ async def fetch_page(url: str) -> str:
         return error_message
 ```
 
-This asynchronous function uses Playwright to handle potential JavaScript rendering on Amazon pages. The `@mcp.tool()` decorator registers this function as a callable tool within our server.
+이 비동기 함수는 Amazon 페이지에서 발생할 수 있는 JavaScript 렌더링을 처리하기 위해 Playwright를 사용합니다. `@mcp.tool()` 데코레이터는 이 함수를 server 내에서 호출 가능한 tool로 등록합니다.
 
 ### Step 4: Implementing the `extract_info` Tool
 
-This tool reads the HTML file saved by `fetch_page`, parses it using LXML and XPath selectors, and returns a dictionary containing the extracted product details.
+이 tool은 `fetch_page`가 저장한 HTML 파일을 읽고, LXML과 XPath 셀렉터로 파싱한 뒤, 추출한 상품 세부 정보를 담은 딕셔너리를 반환합니다.
 
 ```python
 def _extract_xpath(tree, xpath, default="N/A"):
@@ -299,11 +299,11 @@ def extract_info() -> dict:
         return {"error": error_message}
 ```
 
-This function uses LXML's `fromstring` to parse the HTML and robust XPath selectors to find the desired elements
+이 함수는 LXML의 `fromstring`으로 HTML을 파싱하고, 견고한 XPath 셀렉터로 원하는 요소를 찾습니다.
 
 ### Step 5: Running the Server
 
-Finally, add the following lines to the end of your `amazon_scraper_mcp.py` script to start the server using the `stdio` transport mechanism, which is standard for local MCP servers communicating with clients like Claude Desktop or Cursor.
+마지막으로 `amazon_scraper_mcp.py` 스크립트 끝에 다음 줄을 추가하여 `stdio` 전송 메커니즘으로 server를 시작합니다. 이는 Claude Desktop 또는 Cursor 같은 클라이언트와 통신하는 로컬 MCP server에서 표준으로 사용됩니다.
 
 ```python
 if __name__ == "__main__":
@@ -487,17 +487,17 @@ if __name__ == "__main__":
 
 ## Connecting Your MCP Server
 
-Now that the server script is ready, let's connect it to MCP clients like Claude Desktop and Cursor.
+이제 server script가 준비되었으니, Claude Desktop 및 Cursor 같은 MCP client에 연결해 보겠습니다.
 
 ### Setting Up with Claude Desktop
 
-**Step 1:** Open Claude Desktop.
+**Step 1:** Claude Desktop을 엽니다.
 
-**Step 2:** Navigate to `Settings` -> `Developer` -> `Edit Config`. This will open the `claude_desktop_config.json` file in your default text editor.
+**Step 2:** `Settings` -> `Developer` -> `Edit Config`로 이동합니다. 그러면 기본 텍스트 편집기에서 `claude_desktop_config.json` 파일이 열립니다.
 
 ![claude-desktop-settings-menu-navigation](https://github.com/luminati-io/web-scraping-with-mcp/blob/main/images/claude-desktop-settings-menu-navigation.png)
 
-**Step 3:** Add an entry for your server under the `mcpServers` key. Make sure to replace the path in `args` with the absolute path to your `amazon_scraper_mcp.py` file.
+**Step 3:** `mcpServers` 키 아래에 server 항목을 추가합니다. `args`의 경로를 `amazon_scraper_mcp.py` 파일의 절대 경로로 바꾸는 것을 잊지 마십시오.
 
 ```json
 {
@@ -510,54 +510,54 @@ Now that the server script is ready, let's connect it to MCP clients like Claude
 }
 ```
 
-**Step 4:** Save the `claude_desktop_config.json` file and completely close and reopen Claude Desktop for the changes to take effect.
+**Step 4:** `claude_desktop_config.json` 파일을 저장한 뒤, 변경 사항이 적용되도록 Claude Desktop을 완전히 종료했다가 다시 실행합니다.
 
-**Step 5:** In Claude Desktop, you should now see a small tools icon (like a hammer 🔨) in the chat input area.
+**Step 5:** 이제 Claude Desktop의 채팅 입력 영역에 작은 도구 아이콘(망치 🔨 같은)이 표시되어야 합니다.
 
 ![claude-desktop-mcp-tools-icon-interface](https://github.com/luminati-io/web-scraping-with-mcp/blob/main/images/claude-desktop-mcp-tools-icon-interface.png)
 
-**Step 6:** Clicking it should list your "Amazon Product Scraper" with its `fetch_page` and `extract_info` tools.
+**Step 6:** 이를 클릭하면 `fetch_page` 및 `extract_info` tools를 포함한 "Amazon Product Scraper"가 나열되어야 합니다.
 
 ![claude-available-mcp-tools-dialog-amazon-scraper](https://github.com/luminati-io/web-scraping-with-mcp/blob/main/images/claude-available-mcp-tools-dialog-amazon-scraper.png)
 
-**Step 7:** Send a Prompt, for example: _"Get the current price, original price, and rating for this Amazon product: [https://www.amazon.com/dp/B09C13PZX7](https://www.amazon.com/dp/B09C13PZX7)"._
+**Step 7:** 예를 들어 다음과 같은 프롬프트를 보냅니다: _"Get the current price, original price, and rating for this Amazon product: [https://www.amazon.com/dp/B09C13PZX7](https://www.amazon.com/dp/B09C13PZX7)"._
 
-**Step 8:** Claude will detect that this requires external tools and prompt you for permission to run `fetch_page` first and then `extract_info`. Click "Allow for this chat" for each tool.
+**Step 8:** Claude는 외부 도구가 필요함을 감지하고 먼저 `fetch_page`, 그 다음 `extract_info`를 실행할 권한을 요청합니다. 각 tool에 대해 "Allow for this chat"를 클릭합니다.
 
 ![mcp-permission-dialog-fetch-page-amazon-tool](https://github.com/luminati-io/web-scraping-with-mcp/blob/main/images/mcp-permission-dialog-fetch-page-amazon-tool.png)
 
-**Step 9:** After granting permissions, the MCP server will execute the tools. Claude will then receive the structured data and present it in the chat.
+**Step 9:** 권한을 부여하면 MCP server가 tools를 실행합니다. Claude는 구조화된 데이터를 수신한 후 채팅에서 이를 제시합니다.
 
 ![claude-amazon-product-data-extraction-results](https://github.com/luminati-io/web-scraping-with-mcp/blob/main/images/claude-amazon-product-data-extraction-results-2.png)
 
 ### Setting Up with Cursor
 
-The process for Cursor (an AI-first IDE) is similar.
+Cursor(AI-first IDE)의 과정도 유사합니다.
 
-**Step 1:** Open Cursor.
+**Step 1:** Cursor를 엽니다.
 
-**Step 2:** Go to `Settings` ⚙️ and navigate the `MCP` section.
+**Step 2:** `Settings` ⚙️로 이동한 뒤 `MCP` 섹션으로 이동합니다.
 
 ![cursor-ide-add-new-global-mcp-server-settings](https://github.com/luminati-io/web-scraping-with-mcp/blob/main/images/cursor-ide-add-new-global-mcp-server-settings.png)
 
-**Step 3:** Click "+Add a new global MCP Server". This will open the `mcp.json` configuration file. Add an entry for your server, again using the **absolute path** to your script.
+**Step 3:** "+Add a new global MCP Server"를 클릭합니다. 그러면 `mcp.json` 구성 파일이 열립니다. server 항목을 추가하되, 스크립트의 **절대 경로**를 사용합니다.
 
 ![cursor-mcp-json-configuration-file-amazon-scraper](https://github.com/luminati-io/web-scraping-with-mcp/blob/main/images/cursor-mcp-json-configuration-file-amazon-scraper.png)
 
-**Step 4:** Save the `mcp.json` file and you should see your "amazon\_product\_scraper" listed, hopefully with a green dot indicating it's running and connected.
+**Step 4:** `mcp.json` 파일을 저장하면 "amazon\_product\_scraper"가 목록에 표시되고, 실행 및 연결 상태를 나타내는 녹색 점이 표시되기를 기대할 수 있습니다.
 
 ![cursor-ide-configured-amazon-scraper-mcp-settings](https://github.com/luminati-io/web-scraping-with-mcp/blob/main/images/cursor-ide-configured-amazon-scraper-mcp-settings.png)
 
-**Step 5:** Use Cursor's chat feature (`Cmd+l` or `Ctrl+l`).
+**Step 5:** Cursor의 채팅 기능(`Cmd+l` 또는 `Ctrl+l`)을 사용합니다.
 
-**Step 6:** Send a Prompt, for example: "_Extract all available product data from this Amazon URL: [https://www.amazon.com/dp/B09C13PZX7](https://www.amazon.com/dp/B09C13PZX7). Format the output as a structured JSON object"._
+**Step 6:** 예를 들어 다음과 같은 프롬프트를 보냅니다: "_Extract all available product data from this Amazon URL: [https://www.amazon.com/dp/B09C13PZX7](https://www.amazon.com/dp/B09C13PZX7). Format the output as a structured JSON object"_.
 
-**Step 7:** Similar to Claude Desktop, the Cursor will ask for permission to run the `fetch_page` and `extract_info` tools. Approve these requests ("Run Tool").
+**Step 7:** Claude Desktop과 마찬가지로 Cursor는 `fetch_page` 및 `extract_info` tools 실행 권한을 요청합니다. 요청을 승인합니다("Run Tool").
 
-**Step 8:** The Cursor will display the interaction flow, showing the calls to your MCP tools and finally presenting the structured JSON data returned by your `extract_info` tool.
+**Step 8:** Cursor는 상호작용 흐름을 표시하며, MCP tool 호출을 보여준 다음 `extract_info` tool이 반환한 구조화된 JSON 데이터를 최종적으로 제시합니다.
 
 ![cursor-ide-amazon-product-data-extraction-json-results](https://github.com/luminati-io/web-scraping-with-mcp/blob/main/images/cursor-ide-amazon-product-data-extraction-json-results.png)
-Here's an example of JSON output from Cursor:
+다음은 Cursor에서의 JSON 출력 예시입니다:
 
 ```json
 {
@@ -580,38 +580,38 @@ Here's an example of JSON output from Cursor:
 }
 ```
 
-This shows the flexibility of MCP – the same server works seamlessly with different client applications.
+이는 MCP의 유연성을 보여줍니다. 동일한 server가 서로 다른 client 애플리케이션과도 매끄럽게 동작합니다.
 
 ## Using Bright Data's MCP for Professional Web Data Extraction
 
-Bright Data’s enterprise-grade [Model Context Protocol (MCP)](https://github.com/luminati-io/brightdata-mcp) solution eliminates the complexities of self-managed MCP servers—such as proxy management, [anti-bot navigation](https://brightdata.com/blog/web-data/anti-scraping-techniques), and scaling challenges—offering seamless integration with [AI agents](https://brightdata.com/use-cases/apps-agents) and LLMs.
+Bright Data의 엔터프라이즈급 [Model Context Protocol (MCP)](https://github.com/luminati-io/brightdata-mcp) 솔루션은 자체 관리형 MCP server의 복잡성(예: プロキシ 관리, [アンチボット 내비게이션](https://brightdata.co.kr/blog/web-data/anti-scraping-techniques), 스케일링 과제)을 제거하고, [AI agents](https://brightdata.co.kr/use-cases/apps-agents) 및 LLM과의 원활한 통합을 제공합니다.
 
-Connecting to Bright Data’s MCP enables immediate access to public web data, including SERP results and hard-to-reach sites, optimized for AI workflows.
+Bright Data의 MCP에 연결하면 SERP 결과 및 접근이 어려운 사이트를 포함한 공개 웹 데이터에 즉시 접근할 수 있으며, AI 워크플로에 최적화되어 있습니다.
 
-MCP unlocks a powerful web extraction framework with tools like the [Web Unlocker](https://brightdata.com/products/web-unlocker), [SERP API](https://brightdata.com/products/serp-api), [Web Scraper API](https://brightdata.com/products/web-scraper), and [Scraping Browser](https://brightdata.com/products/scraping-browser), delivering:
+MCP는 [Web Unlocker](https://brightdata.co.kr/products/web-unlocker), [SERP API](https://brightdata.co.kr/products/serp-api), [Web Scraper API](https://brightdata.co.kr/products/web-scraper), [Scraping Browser](https://brightdata.co.kr/products/scraping-browser) 같은 도구를 통해 강력한 웹 추출 프레임워크를 제공합니다:
 
-- **[AI-Ready Data](https://brightdata.com/use-cases/data-for-ai):** Pre-structured content, no preprocessing needed.
-- **Scalability & Reliability:** High-volume support without slowdowns.
-- **Block & CAPTCHA Bypass:** Advanced anti-bot capabilities.
-- **Global IP Coverage:** Access from 195 countries with [Bright Data proxies](https://brightdata.com/proxy-types).
-- **Seamless Integration:** Quick setup with any MCP client.
+- **[AI-Ready Data](https://brightdata.co.kr/use-cases/data-for-ai):** 사전 구조화된 콘텐츠로, 전처리가 필요 없습니다.
+- **확장성 및 신뢰성:** 지연 없이 대용량을 지원합니다.
+- **차단 및 CAPTCHA 우회:** 고급 アンチボット 기능을 제공합니다.
+- **글로벌 IP 커버리지:** [Bright Data proxies](https://brightdata.co.kr/proxy-types)를 통해 195개 국가에서 접근합니다.
+- **원활한 통합:** 어떤 MCP client에서도 빠르게 설정할 수 있습니다.
 
 ### Prerequisites for Bright Data MCP
 
-Before starting your Bright Data MCP integration, verify you have the following:
+Bright Data MCP 통합을 시작하기 전에 다음을 확인하십시오:
 
-1. **Bright Data Account:** Register at [brightdata.com](https://brightdata.com/). First-time users receive complimentary credits for testing.
-2. **API Token:** Secure your API token from your Bright Data account settings ([User Settings Page](https://brightdata.com/cp/setting/users)).
-3. **Web Unlocker Zone:** [Establish a Web Unlocker proxy](https://docs.brightdata.com/scraping-automation/web-unlocker/quickstart) zone in your Bright Data control panel. Choose a memorable identifier, such as `mcp_unlocker` (this can be modified later via environment variables if necessary).
-4. **(Optional) Scraping Browser Zone:** If you require advanced browser automation features (e.g., for intricate JavaScript interactions or screenshots), [establish a Scraping Browser zone](https://docs.brightdata.com/scraping-automation/scraping-browser/quickstart). Record the authentication details (Username and Password) provided for this zone (within the **Overview** tab), typically formatted as `brd-customer-ACCOUNT_ID-zone-ZONE_NAME:PASSWORD`.
+1. **Bright Data Account:** [brightdata.com](https://brightdata.co.kr/)에서 등록합니다. 첫 사용자는 테스트용 무료 크레딧을 받습니다.
+2. **API Token:** Bright Data 계정 설정에서 API token을 확보합니다([User Settings Page](https://brightdata.co.kr/cp/setting/users)).
+3. **Web Unlocker Zone:** Bright Data 제어 패널에서 [Web Unlocker proxy](https://docs.brightdata.com/scraping-automation/web-unlocker/quickstart) zone을 생성합니다. `mcp_unlocker`처럼 기억하기 쉬운 식별자를 선택하십시오(필요 시 환경 변수로 나중에 변경 가능).
+4. **(Optional) Scraping Browser Zone:** 고급 브라우저 자동화 기능(예: 복잡한 JavaScript 상호작용 또는 스크린샷)이 필요하다면 [Scraping Browser zone](https://docs.brightdata.com/scraping-automation/scraping-browser/quickstart)을 생성하십시오. 이 zone에 대해 제공되는 인증 정보(Username 및 Password)를(**Overview** 탭에서) 기록하십시오. 일반적으로 `brd-customer-ACCOUNT_ID-zone-ZONE_NAME:PASSWORD` 형식입니다.
 
 ### Quickstart: Configuring Bright Data MCP for Claude Desktop
 
-**Step 1:** The Bright Data MCP server typically runs using `npx`, which comes bundled with Node.js. Install Node.js if needed from the [official website](https://nodejs.org/en/download).
+**Step 1:** Bright Data MCP server는 일반적으로 Node.js에 번들로 포함된 `npx`로 실행됩니다. 필요하다면 [공식 웹사이트](https://nodejs.org/en/download)에서 Node.js를 설치하십시오.
 
-**Step 2:** Open Claude Desktop -> `Settings` -> `Developer` -> `Edit Config` (`claude_desktop_config.json`).
+**Step 2:** Claude Desktop -> `Settings` -> `Developer` -> `Edit Config` (`claude_desktop_config.json`)를 엽니다.
 
-**Step 3:** Insert the Bright Data server configuration under `mcpServers`. Substitute placeholders with your actual credentials.
+**Step 3:** `mcpServers` 아래에 Bright Data server 구성을 삽입합니다. 플레이스홀더를 실제 자격 증명으로 바꾸십시오.
 
 ```json
 {
@@ -630,23 +630,23 @@ Before starting your Bright Data MCP integration, verify you have the following:
 }
 ```
 
-**Step 4:** Save the configuration file and restart Claude Desktop.
+**Step 4:** 구성 파일을 저장한 뒤 Claude Desktop을 재시작합니다.
 
-**Step 5:** Hover over the hammer icon (🔨) in Claude Desktop. You should now see multiple MCP tools available.
+**Step 5:** Claude Desktop에서 망치 아이콘(🔨)에 마우스를 올리면, 이제 여러 MCP tool을 사용할 수 있어야 합니다.
 
 ![claude-desktop-interface-with-mcp-tools-available](https://github.com/luminati-io/web-scraping-with-mcp/blob/main/images/claude-desktop-interface-with-mcp-tools-available.png)
 
-Let's attempt to extract data from Zillow, a website known for potentially restricting scrapers. Prompt Claude with "_Extract key property data in JSON format from this Zillow URL: [https://www.zillow.com/apartments/arverne-ny/the-tides-at-arverne-by-the-sea/ChWHPZ/](https://www.zillow.com/apartments/arverne-ny/the-tides-at-arverne-by-the-sea/ChWHPZ/)_"
+スクレイ퍼를 제한할 가능성이 있는 웹사이트로 알려진 Zillow에서 데이터 추출을 시도해 보겠습니다. Claude에 다음과 같이 프롬프트를 입력하십시오: "_Extract key property data in JSON format from this Zillow URL: [https://www.zillow.com/apartments/arverne-ny/the-tides-at-arverne-by-the-sea/ChWHPZ/](https://www.zillow.com/apartments/arverne-ny/the-tides-at-arverne-by-the-sea/ChWHPZ/)_"
 
 ![bright-data-mcp-zillow-property-extraction-process](https://github.com/luminati-io/web-scraping-with-mcp/blob/main/images/bright-data-mcp-zillow-property-extraction-process.png)
 
-Permit Claude to utilize the necessary Bright Data MCP tools. Bright Data's MCP server will manage the underlying complexities (proxy rotation, JavaScript rendering via Scraping Browser if required).
+Claude가 필요한 Bright Data MCP tools를 사용하도록 허용하십시오. Bright Data의 MCP server가 기반 복잡성(プロキシ 로테이션, 필요 시 Scraping Browser를 통한 JavaScript 렌더링)을 처리합니다.
 
-Bright Data's server conducts the extraction and delivers structured data, which Claude presents.
+Bright Data server가 추출을 수행하고 구조화된 데이터를 전달하면, Claude가 이를 표시합니다.
 
 ![zillow-property-data-json-structure-bright-data-mcp](https://github.com/luminati-io/web-scraping-with-mcp/blob/main/images/zillow-property-data-json-structure-bright-data-mcp.png)
 
-Here's a sample of the potential output:
+가능한 출력의 예시는 다음과 같습니다:
 
 ```json
 {
@@ -665,25 +665,25 @@ Here's a sample of the potential output:
 }
 ```
 
-**Another Example: Hacker News Headlines**
+**또 다른 예: Hacker News 헤드라인**
 
-A more straightforward query: "_Give me the titles of the latest 5 news articles from Hacker News_".
+더 간단한 쿼리로는 다음이 있습니다: "_Give me the titles of the latest 5 news articles from Hacker News_".
 
 ![hacker-news-latest-articles-mcp-extraction-results](https://github.com/luminati-io/web-scraping-with-mcp/blob/main/images/hacker-news-latest-articles-mcp-extraction-results.png)
 
-This demonstrates how Bright Data's MCP server simplifies accessing even dynamic or heavily secured web content directly within your AI workflow.
+이는 Bright Data의 MCP server가 AI 워크플로 내에서 동적이거나 강하게 보안된 웹 콘텐츠에도 직접 접근하는 과정을 얼마나 단순화하는지 보여줍니다.
 
 ## Further Reading
 
-Here is a curation of our earlier guides on AI and large language models (LLMs) for more in-depth knowledge:
+AI 및 대규모 언어 모델(LLM)에 대해 더 깊이 있는 지식을 얻기 위해, 이전 가이드 중 일부를 선별하여 소개합니다:
 
-- [Top Sources for Finding LLM Training Data](https://brightdata.com/blog/web-data/llm-training-data)
-- [Web Scraping with LLaMA 3: Turn Any Website into Structured JSON](https://brightdata.com/blog/web-data/web-scraping-with-llama-3)
-- [Web Scraping With LangChain and Bright Data](https://brightdata.com/blog/web-data/web-scraping-with-langchain-and-bright-data)
-- [How To Create a RAG Chatbot With GPT-4o Using SERP Data](https://brightdata.com/blog/web-data/build-a-rag-chatbot)
+- [Top Sources for Finding LLM Training Data](https://brightdata.co.kr/blog/web-data/llm-training-data)
+- [Web Scraping with LLaMA 3: Turn Any Website into Structured JSON](https://brightdata.co.kr/blog/web-data/web-scraping-with-llama-3)
+- [Web Scraping With LangChain and Bright Data](https://brightdata.co.kr/blog/web-data/web-scraping-with-langchain-and-bright-data)
+- [How To Create a RAG Chatbot With GPT-4o Using SERP Data](https://brightdata.co.kr/blog/web-data/build-a-rag-chatbot)
 
 ## Conclusion
 
-Anthropic's Model Context Protocol represents a fundamental shift in how AI systems interact with the external world. You can construct custom MCP servers for specific tasks. Bright Data's MCP integration enhances this further by delivering enterprise-grade web scraping capabilities that evade anti-bot protections and supply [AI-ready structured data](https://brightdata.com/use-cases/data-for-ai).
+Anthropic의 Model Context Protocol은 AI 시스템이 외부 세계와 상호작용하는 방식에 근본적인 변화를 가져옵니다. 특정 작업을 위해 커스텀 MCP server를 구축할 수 있습니다. Bright Data의 MCP 통합은 アンチボット 보호를 회피하고 [AI-ready 구조화 데이터](https://brightdata.co.kr/use-cases/data-for-ai)를 제공하는 엔터프라이즈급 Webスクレイピング 기능을 전달함으로써 이를 한층 더 강화합니다.
 
-Register and try out [AI solutions](https://brightdata.com/ai) today for free!
+지금 [AI solutions](https://brightdata.co.kr/ai)에 등록하고 무료로 사용해 보십시오!
