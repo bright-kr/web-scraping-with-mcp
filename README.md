@@ -1,4 +1,4 @@
-# Anthropic의 MCP로 Webスクレイピング하기
+# Anthropic의 MCP로 Web스크레이핑하기
 
 [![Bright Data Promo](https://github.com/bright-kr/LinkedIn-Scraper/raw/main/Proxies%20and%20scrapers%20GitHub%20bonus%20banner.png)](https://brightdata.co.kr/)
 
@@ -57,7 +57,7 @@ MCP는 세 가지 핵심 구성 요소를 갖춘 클라이언트-서버 아키�
 2. **MCP Client**: 호스트 내부의 구성 요소로, MCP Server와의 연결을 설정하고 유지하며 통신 프로토콜을 처리하고 데이터 교환을 관리합니다.
 3. **MCP Server:** (개발자가 만드는) MCP 프로토콜을 구현하고 특정 기능 집합을 노출하는 프로그램입니다. MCP 서버는 데이터베이스, 웹 서비스 또는 (이 글의 경우) 웹사이트(Amazon)와 인터페이스할 수 있습니다. 서버는 다음과 같은 표준화된 방식으로 기능을 노출합니다:
    - **Tools:** 호출 가능한 함수(예: _scrape\_amazon\_product_, _get\_weather\_data_)
-   - **Resources:** 정적 데이터를 가져오기 위한 읽기 전용 エンドポイント(예: 파일을 가져오기, JSON 레코드 반환)
+   - **Resources:** 정적 데이터를 가져오기 위한 읽기 전용 엔드포인트(예: 파일을 가져오기, JSON 레코드 반환)
    - **Prompts:** 도구 및 리소스와의 LLM 상호작용을 안내하는 사전 정의 템플릿
 
 다음은 MCP 아키텍처 다이어그램입니다:
@@ -108,7 +108,7 @@ python -m playwright install
 이 명령은 다음을 설치합니다:
 
 - **mcp**: 모든 JSON-RPC 통신 세부 사항을 처리하는 Model Context Protocol 서버/클라이언트를 위한 Python SDK입니다.
-- **playwright**: JavaScript 비중이 큰 웹사이트를 렌더링하고 スクレイピング하기 위한 헤드리스 브라우저 기능을 제공하는 브라우저 자동화 라이브러리입니다.
+- **playwright**: JavaScript 비중이 큰 웹사이트를 렌더링하고 스크레이핑하기 위한 헤드리스 브라우저 기능을 제공하는 브라우저 자동화 라이브러리입니다.
 - **lxml**: XPath 쿼리를 사용해 웹 페이지에서 특정 데이터 요소를 쉽게 추출할 수 있게 해주는 빠른 XML/HTML 파싱 라이브러리입니다.
 
 요약하면, MCP Python SDK(`mcp`)가 프로토콜 세부 사항을 모두 처리해 주므로 Claude 또는 Cursor가 자연어 프롬프트로 호출할 수 있는 tool을 노출할 수 있습니다. Playwright는 웹 페이지(包括 JavaScript 콘텐츠)를 완전히 렌더링할 수 있게 해주고, lxml은 강력한 HTML 파싱 기능을 제공합니다.
@@ -584,7 +584,7 @@ Cursor(AI-first IDE)의 과정도 유사합니다.
 
 ## Using Bright Data's MCP for Professional Web Data Extraction
 
-Bright Data의 엔터프라이즈급 [Model Context Protocol (MCP)](https://github.com/bright-kr/brightdata-mcp) 솔루션은 자체 관리형 MCP server의 복잡성(예: プロキシ 관리, [アンチボット 내비게이션](https://brightdata.co.kr/blog/web-data/anti-scraping-techniques), 스케일링 과제)을 제거하고, [AI agents](https://brightdata.co.kr/use-cases/apps-agents) 및 LLM과의 원활한 통합을 제공합니다.
+Bright Data의 엔터프라이즈급 [Model Context Protocol (MCP)](https://github.com/bright-kr/brightdata-mcp) 솔루션은 자체 관리형 MCP server의 복잡성(예: 프록시 관리, [안티봇 내비게이션](https://brightdata.co.kr/blog/web-data/anti-scraping-techniques), 스케일링 과제)을 제거하고, [AI agents](https://brightdata.co.kr/use-cases/apps-agents) 및 LLM과의 원활한 통합을 제공합니다.
 
 Bright Data의 MCP에 연결하면 SERP 결과 및 접근이 어려운 사이트를 포함한 공개 웹 데이터에 즉시 접근할 수 있으며, AI 워크플로에 최적화되어 있습니다.
 
@@ -592,7 +592,7 @@ MCP는 [Web Unlocker](https://brightdata.co.kr/products/web-unlocker), [SERP API
 
 - **[AI-Ready Data](https://brightdata.co.kr/use-cases/data-for-ai):** 사전 구조화된 콘텐츠로, 전처리가 필요 없습니다.
 - **확장성 및 신뢰성:** 지연 없이 대용량을 지원합니다.
-- **차단 및 CAPTCHA 우회:** 고급 アンチボット 기능을 제공합니다.
+- **차단 및 CAPTCHA 우회:** 고급 안티봇 기능을 제공합니다.
 - **글로벌 IP 커버리지:** [Bright Data proxies](https://brightdata.co.kr/proxy-types)를 통해 195개 국가에서 접근합니다.
 - **원활한 통합:** 어떤 MCP client에서도 빠르게 설정할 수 있습니다.
 
@@ -640,7 +640,7 @@ Bright Data MCP 통합을 시작하기 전에 다음을 확인하십시오:
 
 ![bright-data-mcp-zillow-property-extraction-process](https://github.com/bright-kr/web-scraping-with-mcp/blob/main/images/bright-data-mcp-zillow-property-extraction-process.png)
 
-Claude가 필요한 Bright Data MCP tools를 사용하도록 허용하십시오. Bright Data의 MCP server가 기반 복잡성(プロキシ 로테이션, 필요 시 Scraping Browser를 통한 JavaScript 렌더링)을 처리합니다.
+Claude가 필요한 Bright Data MCP tools를 사용하도록 허용하십시오. Bright Data의 MCP server가 기반 복잡성(프록시 로테이션, 필요 시 Scraping Browser를 통한 JavaScript 렌더링)을 처리합니다.
 
 Bright Data server가 추출을 수행하고 구조화된 데이터를 전달하면, Claude가 이를 표시합니다.
 
@@ -684,6 +684,6 @@ AI 및 대규모 언어 모델(LLM)에 대해 더 깊이 있는 지식을 얻기
 
 ## Conclusion
 
-Anthropic의 Model Context Protocol은 AI 시스템이 외부 세계와 상호작용하는 방식에 근본적인 변화를 가져옵니다. 특정 작업을 위해 커스텀 MCP server를 구축할 수 있습니다. Bright Data의 MCP 통합은 アンチボット 보호를 회피하고 [AI-ready 구조화 데이터](https://brightdata.co.kr/use-cases/data-for-ai)를 제공하는 엔터프라이즈급 Webスクレイピング 기능을 전달함으로써 이를 한층 더 강화합니다.
+Anthropic의 Model Context Protocol은 AI 시스템이 외부 세계와 상호작용하는 방식에 근본적인 변화를 가져옵니다. 특정 작업을 위해 커스텀 MCP server를 구축할 수 있습니다. Bright Data의 MCP 통합은 안티봇 보호를 회피하고 [AI-ready 구조화 데이터](https://brightdata.co.kr/use-cases/data-for-ai)를 제공하는 엔터프라이즈급 Web스크레이핑 기능을 전달함으로써 이를 한층 더 강화합니다.
 
 지금 [AI solutions](https://brightdata.co.kr/ai)에 등록하고 무료로 사용해 보십시오!
